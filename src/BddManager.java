@@ -15,9 +15,16 @@ public class BddManager implements Observable {
         this.bdd_statement = null;
 
         this.connected_users = new ArrayList<User>();
+
         try {
             InetAddress address = InetAddress.getLocalHost();
             this.local_user = new User(address,"");
+
+            // POUR LES TESTS A ENLEVER !
+            this.connected_users.add(new User(address,"Jean"));
+            this.connected_users.add(new User(address,"Pierre"));
+            this.connected_users.add(new User(address, "Matthieu"));
+
         }
         catch (UnknownHostException e) {
             System.out.println("Unknown Host Address !\n");
@@ -39,7 +46,7 @@ public class BddManager implements Observable {
       boolean exists = false;
       for(int i=0; i<this.connected_users.size();i++) {
         User current = this.connected_users.get(i);
-        if(current.getId().equals(user.getId())) {
+        if(current.getIp().equals(user.getIp())) {
           exists = true;
         }
       }
@@ -53,7 +60,7 @@ public class BddManager implements Observable {
       int index = -1;
       for(int i=0; i<this.connected_users.size();i++) {
         User current = this.connected_users.get(i);
-        if(current.getId().equals(user.getId())) {
+        if(current.getIp().equals(user.getIp())) {
           index = i;
         }
       }
@@ -64,7 +71,26 @@ public class BddManager implements Observable {
     }
 
     public ArrayList<User> getUserList() {
-        return this.connected_users;
+      return this.connected_users;
+    }
+
+    public String[] getPseudoList() {
+        String[] list = new String[this.connected_users.size()];
+        for(int i = 0; i<this.connected_users.size(); i++) {
+          list[i] = this.connected_users.get(i).getPseudo();
+        }
+        return list;
+    }
+
+    public InetAddress getIpFromPseudo(String pseudo) {
+      InetAddress ip = null;
+      for(int i=0; i<this.connected_users.size(); i++) {
+        User user = this.connected_users.get(i);
+        if(user.getPseudo().equals(pseudo)) {
+          ip = user.getIp();
+        }
+      }
+      return ip;
     }
 
     public void addMessage(InetAddress source, InetAddress dest, byte[] data, String timestamp) {
@@ -83,7 +109,7 @@ public class BddManager implements Observable {
 
             this.bdd_statement = this.bdd_connection.createStatement();
 
-            if(local_user.getId().equals(source)) {
+            if(local_user.getIp().equals(source)) {
                 sql = "create table if not exists LOG_"+ dest_reformatted +" (source VARCHAR(20), dest VARCHAR(20), data VARCHAR(100), timestamp VARCHAR(20))";
                 this.bdd_statement.executeUpdate(sql);
 
@@ -92,7 +118,7 @@ public class BddManager implements Observable {
 
                 notifyObserver("new_message_to_"+ dest_address);
             }
-            else if(local_user.getId().equals(dest)) {
+            else if(local_user.getIp().equals(dest)) {
                 sql = "create table if not exists LOG_"+ source_reformatted +" (source VARCHAR(20), dest VARCHAR(20), data VARCHAR(100), timestamp VARCHAR(20))";
                 this.bdd_statement.executeUpdate(sql);
 
@@ -150,7 +176,7 @@ public class BddManager implements Observable {
     }
 
     public void removeObserver() {
-        listObserver = new ArrayList<Observer>();
+        this.listObserver = new ArrayList<Observer>();
     }
 
     public void notifyObserver(String str) {

@@ -2,92 +2,100 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class LoginWindow extends JFrame {
+public class LoginWindow extends JFrame implements Observer {
 
-    private static String LOOKANDFEEL = "GTK+";
+    private MainController controler;
+    private boolean alreadyConnected;
+
+    private JPanel users = new JPanel();
+    private JPanel login = new JPanel();
 
     private JLabel labelPseudo = new JLabel("Pseudo :");
-    private JButton button = new JButton("Connexion !");
+    private JButton connect_button = new JButton("Connexion !");
     private JTextField textPseudo = new JTextField();
 
-    public LoginWindow(String name) {
-        super(name);
+    private JLabel online_users = new JLabel("Utilisateurs en ligne:");
+    private JList<String> user_list = null;
+
+    public LoginWindow(MainController controler, boolean alreadyConnected) {
+      this.alreadyConnected = alreadyConnected;
+      this.controler = controler;
+      this.controler.getModel().addObserver(this);
+      this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
+
+      this.showGUI();
     }
 
-    private static void initLookAndFeel() {
-        String lookAndFeel = null;
-        
-        if(LOOKANDFEEL != null) {
-            if(LOOKANDFEEL.equals("Metal")) {
-                lookAndFeel = UIManager.getCrossPlatformLookAndFeelClassName();
-            }
-            else if (LOOKANDFEEL.equals("System")) {
-                lookAndFeel = UIManager.getSystemLookAndFeelClassName();
-            }
-            else if (LOOKANDFEEL.equals("Motif")) {
-                lookAndFeel = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
-            }
-            else if (LOOKANDFEEL.equals("GTK+")) {
-                lookAndFeel = "com.sun.java.swing.plaf.gtk.GTKLookAndFeel";
-            }
-            else {
-                System.err.println("Unexpected value of LOOKANDFEEL specified: " + LOOKANDFEEL);
-                lookAndFeel = UIManager.getCrossPlatformLookAndFeelClassName();
-            }
+    public void addComponentsToPanes() {
+        users.setLayout(new BoxLayout(users, BoxLayout.PAGE_AXIS));
+        users.add(online_users);
+        users.add(user_list);
 
-            try {
-                UIManager.setLookAndFeel(lookAndFeel);
-            } catch (ClassNotFoundException e) {
-                System.err.println("Couldn't find class for specified look and feel:"
-                        + lookAndFeel);
-                System.err.println("Did you include the L&F library in the class path?");
-                System.err.println("Using the default look and feel.");
-            } catch (UnsupportedLookAndFeelException e) {
-                System.err.println("Can't use the specified look and feel ("
-                        + lookAndFeel
-                        + ") on this platform.");
-                System.err.println("Using the default look and feel.");
-            } catch (Exception e) {
-                System.err.println("Couldn't get specified look and feel ("
-                        + lookAndFeel
-                        + "), for some reason.");
-                System.err.println("Using the default look and feel.");
-                e.printStackTrace();
-            }
-        }
-    }
+        login.setLayout(new BoxLayout(login, BoxLayout.PAGE_AXIS));
+        login.add(labelPseudo);
+        login.add(textPseudo);
+        login.add(connect_button);
 
-    public void addComponentsToPane(final Container pane) {
-        pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
-        JPanel toppane = new JPanel();
-        toppane.add(Box.createRigidArea(new Dimension(0,1)));
-        toppane.add(labelPseudo);
-        toppane.add(textPseudo);
-        textPseudo.setPreferredSize(new Dimension(150,25));
-        pane.add(toppane);
-        
-        JPanel but = new JPanel();
-        but.add(Box.createRigidArea(new Dimension(0,1)));
-        but.add(button);
-        pane.add(but);
-
-        button.addActionListener(new ActionListener() {
+        connect_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+              String pseudo = textPseudo.getText();
+              if(!pseudo.equals("")) {
+                String[] pseudo_list = controler.getModel().getPseudoList();
+                boolean pseudoAlreadyTaken = false;
+                for(int i=0; i<pseudo_list.length; i++) {
+                  if(!pseudo_list[i].equals(pseudo)) {
+                    pseudoAlreadyTaken = true;
+                  }
+                }
+                if(!pseudoAlreadyTaken) {
+                    if(!alreadyConnected)
+                      controler.connect(pseudo);
+                    else
+                      controler.updatePseudo(pseudo);
+                    controler.getModel().removeObserver();
+                    dispose();
+                    ChatWindow chat = new ChatWindow(controler, pseudo);
+                }
+                else {
+                  JOptionPane.showMessageDialog(null,"Ce pseudo n'est pas disponible pour le moment. Veuillez en choisir un autre !");
+                }
+              }
+              else {
+                JOptionPane.showMessageDialog(null,"Vous devez choisir un pseudo non vide !");
+              }
             }
         });
     }
 
-    public static void createAndShowGUI() {
-        initLookAndFeel();
-        JFrame.setDefaultLookAndFeelDecorated(true);
-        LoginWindow frame = new LoginWindow("MessageApp");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setPreferredSize(new Dimension(300, 150));
-        frame.setMaximumSize(new Dimension(300,150));
-        frame.setLocationRelativeTo(null);
-        frame.addComponentsToPane(frame.getContentPane());
-        frame.pack();
-        frame.setVisible(true);
+    public void showGUI() {
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new java.awt.event.WindowAdapter() {
+          @Override
+          public void windowClosing(java.awt.event.WindowEvent e) {
+            controler.disconnect();
+            e.getWindow().dispose();
+          }
+        });
+
+        this.setTitle("MessageApp");
+        this.setSize(new Dimension(500, 200));
+        this.setResizable(false);
+        this.setLocationRelativeTo(null);
+
+        this.setLayout(new BorderLayout());
+        users.setPreferredSize(new Dimension(200, 200));
+        login.setPreferredSize(new Dimension(300, 200));
+        this.add(users, BorderLayout.LINE_START);
+        this.add(login, BorderLayout.LINE_END);
+
+        this.addComponentsToPanes();
+
+        this.pack();
+        this.setVisible(true);
+    }
+
+    // Implémentation du pattern observer
+    public void update(String str) {
     }
 
 }
