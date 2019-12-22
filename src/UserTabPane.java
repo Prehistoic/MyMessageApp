@@ -10,7 +10,7 @@ public class UserTabPane extends JPanel {
   private InetAddress user_ip;
 
   private JPanel historyPane = new JPanel();
-  private ArrayList<MessageHistory> history = new ArrayList<MessageHistory>();
+  private ArrayList<MessageHistory> history;
 
   private JPanel msgPane = new JPanel();
   private JButton send_button = new JButton("Envoyer");
@@ -48,12 +48,17 @@ public class UserTabPane extends JPanel {
   }
 
   public void updateHistory() {
+    history = new ArrayList<MessageHistory>();
     Log log = controler.getModel().getMsgHistory(user_ip);
     ArrayList<Message> msg_list = log.getHistory();
     for(int i=0; i<msg_list.size(); i++) {
       MessageHistory new_msg = new MessageHistory(msg_list.get(i), controler);
       history.add(new_msg);
     }
+  }
+
+  public InetAddress getUserIp() {
+    return this.user_ip;
   }
 
 }

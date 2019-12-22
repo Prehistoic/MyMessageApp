@@ -43,8 +43,8 @@ public class MessageHistory extends JPanel {
     this.timestamp = msg.getTimestamp();
 
     // Création des éléments du Panel
-    source_info = new JLabel(this.source);
-    dest_info = new JLabel(this.dest);
+    source_info = new JLabel("De "+this.source);
+    dest_info = new JLabel(" à "+this.dest);
     timestamp_info = new JLabel(this.timestamp);
     String data_str = new String(this.data);
     message_content = new JLabel(data_str);

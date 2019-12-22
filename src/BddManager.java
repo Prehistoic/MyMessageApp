@@ -35,7 +35,6 @@ public class BddManager implements Observable {
 
     public void setLocalUser(User target) {
         this.local_user = target;
-        // Faut-il notifier qqch à la view ici ???
     }
 
     public User getLocalUser() {
@@ -126,7 +125,7 @@ public class BddManager implements Observable {
                 sql = "insert into LOG_"+ dest_reformatted +" (source,dest,data,timestamp) values ('"+ source_address +"', '"+ dest_address +"', '"+data_str+"', '"+timestamp+"');";
                 this.bdd_statement.executeUpdate(sql);
 
-                notifyObserver("new_message_to_"+ dest_address);
+                notifyObserver("new_message_to_"+ dest_reformatted);
             }
             else if(local_user.getIp().equals(dest)) {
                 sql = "create table if not exists LOG_"+ source_reformatted +" (source VARCHAR(20), dest VARCHAR(20), data VARCHAR(100), timestamp VARCHAR(20))";
@@ -135,7 +134,7 @@ public class BddManager implements Observable {
                 sql = "insert into LOG_"+ source_reformatted +" (source,dest,data,timestamp) values ('"+ source_address +"', '"+ dest_address +"', '"+data_str+"', '"+timestamp+"');";
                 this.bdd_statement.executeUpdate(sql);
 
-                notifyObserver("new_message_from_"+ source_address);
+                notifyObserver("new_message_from_"+ source_reformatted);
             }
 
         } catch (Exception e) {

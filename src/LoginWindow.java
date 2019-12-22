@@ -96,6 +96,11 @@ public class LoginWindow extends JFrame implements Observer {
 
     // Implémentation du pattern observer
     public void update(String str) {
+      if(str.equals("new_user_online") || str.equals("new_user_offline")) {
+        this.user_list = null;
+        this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
+        this.users.repaint();
+      }
     }
 
 }

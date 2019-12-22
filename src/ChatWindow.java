@@ -93,6 +93,48 @@ public class ChatWindow extends JFrame implements Observer {
 
     // Implémentation du pattern observer
     public void update(String str) {
+      System.out.println(str);
+      if(str.equals("new_user_online") || str.equals("new_user_offline")) {
+        this.user_list = null;
+        this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
+        this.users.repaint();
+      }
+      else if(str.contains("new_message_to_")) {
+        String tmp = str.replace("new_message_to_","");
+        tmp = tmp.replace("_",".");
+        try {
+          InetAddress tmp_address = InetAddress.getByName(tmp);
+          for(int i=0; i<history.getTabCount(); i++) {
+            UserTabPane tab = (UserTabPane) history.getComponentAt(i);
+            if(tab.getUserIp().getHostAddress().equals(tmp)) {
+              UserTabPane new_tab = new UserTabPane(history, controler, tmp_address);
+              history.setComponentAt(i,new_tab);
+            }
+          }
+        }
+        catch (Exception e) {
+          System.err.println(e.getClass().getName()+":"+e.getMessage());
+          System.exit(0);
+        }
+      }
+      else if(str.contains("new_message_from_")) {
+        String tmp = str.replace("new_message_from_","");
+        tmp = tmp.replace("_",".");
+        try {
+          InetAddress tmp_address = InetAddress.getByName(tmp);
+          for(int i=0; i<history.getTabCount(); i++) {
+            UserTabPane tab = (UserTabPane) history.getComponentAt(i);
+            if(tab.getUserIp().getHostAddress().equals(tmp)) {
+              UserTabPane new_tab = new UserTabPane(history, controler, tmp_address);
+              history.setComponentAt(i,new_tab);
+            }
+          }
+        }
+        catch (Exception e) {
+          System.err.println(e.getClass().getName()+":"+e.getMessage());
+          System.exit(0);
+        }
+      }
     }
 
 
