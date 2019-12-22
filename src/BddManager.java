@@ -93,6 +93,17 @@ public class BddManager implements Observable {
       return ip;
     }
 
+    public String getPseudoFromIP(InetAddress address) {
+      String pseudo = "";
+      for(int i = 0; i<this.connected_users.size(); i++) {
+        User user = this.connected_users.get(i);
+        if(user.getIp().equals(address)) {
+          pseudo = user.getPseudo();
+        }
+      }
+      return pseudo;
+    }
+
     public void addMessage(InetAddress source, InetAddress dest, byte[] data, String timestamp) {
         String sql="";
         String source_address = source.getHostAddress();
@@ -105,7 +116,6 @@ public class BddManager implements Observable {
 
             Class.forName("org.sqlite.JDBC");
             this.bdd_connection = DriverManager.getConnection("jdbc:sqlite:app.db");
-            System.out.println("Opened database successfully");
 
             this.bdd_statement = this.bdd_connection.createStatement();
 
@@ -142,6 +152,11 @@ public class BddManager implements Observable {
         Log log = new Log();
 
         try {
+            Class.forName("org.sqlite.JDBC");
+            this.bdd_connection = DriverManager.getConnection("jdbc:sqlite:app.db");
+
+            this.bdd_statement = this.bdd_connection.createStatement();
+
             String sql = "create table if not exists LOG_"+ target_reformatted +" (source VARCHAR(20), dest VARCHAR(20), data VARCHAR(100), timestamp VARCHAR(20))";
             this.bdd_statement.executeUpdate(sql);
 

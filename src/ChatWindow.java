@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.InetAddress;
 
 public class ChatWindow extends JFrame implements Observer {
 
@@ -40,7 +41,8 @@ public class ChatWindow extends JFrame implements Observer {
             }
           }
           if(!alreadyExists) {
-            UserTabPane historyPane = new UserTabPane(history,controler);
+            InetAddress tab_ip = controler.getModel().getIpFromPseudo(selectedItem);
+            UserTabPane historyPane = new UserTabPane(history,controler,tab_ip);
             history.addTab(selectedItem,historyPane);
             history.setTabComponentAt(history.getTabCount()-1,new ButtonTabComponent(history));
             history.setSelectedIndex(history.getTabCount()-1);

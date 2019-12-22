@@ -43,7 +43,7 @@ public class LoginWindow extends JFrame implements Observer {
                 String[] pseudo_list = controler.getModel().getPseudoList();
                 boolean pseudoAlreadyTaken = false;
                 for(int i=0; i<pseudo_list.length; i++) {
-                  if(!pseudo_list[i].equals(pseudo)) {
+                  if(pseudo_list[i].equals(pseudo)) {
                     pseudoAlreadyTaken = true;
                   }
                 }
