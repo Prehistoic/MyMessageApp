@@ -67,6 +67,9 @@ public class ChatWindow extends JFrame implements Observer {
             }
           }
           if(tabExists==-1) {
+            if(history.getTabCount()==7) {
+              history.remove(0);
+            }
             InetAddress tab_ip = controler.getModel().getIpFromPseudo(selectedItem);
             UserTabPane historyPane = new UserTabPane(history,controler,tab_ip);
             history.addTab(selectedItem,historyPane);
@@ -164,6 +167,4 @@ public class ChatWindow extends JFrame implements Observer {
         }
       }
     }
-
-
 }
