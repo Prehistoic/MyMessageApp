@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -10,11 +11,12 @@ public class LoginWindow extends JFrame implements Observer {
     private JPanel users = new JPanel();
     private JPanel login = new JPanel();
 
-    private JLabel labelPseudo = new JLabel("Pseudo :");
+    private JLabel labelPseudo = new JLabel("Choisissez votre pseudo:");
     private JButton connect_button = new JButton("Connexion !");
     private JTextField textPseudo = new JTextField();
 
-    private JLabel online_users = new JLabel("Utilisateurs en ligne:");
+    private JLabel online_users = new JLabel("Utilisateurs en ligne:", SwingConstants.CENTER);
+    private JScrollPane scrollPane = new JScrollPane();
     private JList<String> user_list = null;
 
     public LoginWindow(MainController controler, boolean alreadyConnected) {
@@ -27,14 +29,40 @@ public class LoginWindow extends JFrame implements Observer {
     }
 
     public void addComponentsToPanes() {
-        users.setLayout(new BoxLayout(users, BoxLayout.PAGE_AXIS));
-        users.add(online_users);
-        users.add(user_list);
+        users.setLayout(new BorderLayout(10,10));
+        online_users.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+        user_list.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        scrollPane.setViewportView(user_list);
+        user_list.setLayoutOrientation(JList.VERTICAL);
+        users.add(online_users, BorderLayout.PAGE_START);
+        users.add(scrollPane, BorderLayout.CENTER);
+        users.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        
+        login.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        labelPseudo.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 
-        login.setLayout(new BoxLayout(login, BoxLayout.PAGE_AXIS));
-        login.add(labelPseudo);
-        login.add(textPseudo);
-        login.add(connect_button);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 3;
+        login.add(labelPseudo, c);
+
+        c.insets = new Insets(10,0,0,0);
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = 1;
+        c.gridy = 1;
+        c.gridwidth = 2;
+        login.add(textPseudo, c);
+
+        c.insets = new Insets(20,0,0,0);
+        c.anchor = GridBagConstraints.LAST_LINE_END;
+        c.gridx = 2;
+        c.gridy = 2;
+        c.gridwidth = 1;
+        login.add(connect_button, c);
+
+        login.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
         connect_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -82,7 +110,7 @@ public class LoginWindow extends JFrame implements Observer {
         this.setResizable(false);
         this.setLocationRelativeTo(null);
 
-        this.setLayout(new BorderLayout());
+        this.setLayout(new BorderLayout(10,10));
         users.setPreferredSize(new Dimension(200, 200));
         login.setPreferredSize(new Dimension(300, 200));
         this.add(users, BorderLayout.LINE_START);
@@ -99,7 +127,7 @@ public class LoginWindow extends JFrame implements Observer {
       if(str.equals("new_user_online") || str.equals("new_user_offline")) {
         this.user_list = null;
         this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
-        this.users.repaint();
+        this.users.revalidate();
       }
     }
 

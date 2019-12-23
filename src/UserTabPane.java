@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
@@ -9,6 +10,7 @@ public class UserTabPane extends JPanel {
   private final MainController controler;
   private InetAddress user_ip;
 
+  private JScrollPane scrollPane;
   private JPanel historyPane = new JPanel();
   private ArrayList<MessageHistory> history;
 
@@ -22,18 +24,35 @@ public class UserTabPane extends JPanel {
     this.controler = controler;
     this.user_ip = user_ip;
     this.setLayout(new BorderLayout());
-    this.add(historyPane, BorderLayout.PAGE_START);
-    this.add(msgPane, BorderLayout.PAGE_END);
 
     this.updateHistory();
     historyPane.setLayout(new BoxLayout(historyPane, BoxLayout.PAGE_AXIS));
     for(int i=0; i<history.size(); i++) {
         historyPane.add(history.get(i));
+        historyPane.add(Box.createRigidArea(new Dimension(0,5)));
     }
+    historyPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-    msgPane.setLayout(new BorderLayout());
-    msgPane.add(send_button, BorderLayout.LINE_END);
-    msgPane.add(msg_to_send, BorderLayout.LINE_START);
+    scrollPane = new JScrollPane(historyPane);
+    historyPane.setAutoscrolls(true);
+    scrollPane.setPreferredSize(new Dimension(700,415));
+    scrollPane.setLayout(new ScrollPaneLayout());
+    scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+
+    // Déplacer la scrollbar à la fin de la discussion
+    SwingUtilities.invokeLater(() -> {
+        JScrollBar bar = scrollPane.getVerticalScrollBar();
+        bar.setValue(bar.getMaximum());
+    });
+
+    this.add(scrollPane, BorderLayout.PAGE_START);
+    this.add(msgPane, BorderLayout.PAGE_END);
+
+    msgPane.setLayout(new BoxLayout(msgPane, BoxLayout.LINE_AXIS));
+    msgPane.add(msg_to_send);
+    msgPane.add(Box.createRigidArea(new Dimension(10,0)));
+    msgPane.add(send_button);
+    msgPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
     send_button.addActionListener(new ActionListener () {
       public void actionPerformed(ActionEvent e) {

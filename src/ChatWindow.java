@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.InetAddress;
@@ -10,42 +11,70 @@ public class ChatWindow extends JFrame implements Observer {
     private JPanel users = new JPanel();
     private JPanel chat = new JPanel();
 
-    private JLabel online_users = new JLabel("Utilisateurs en ligne:");
-    private JList<String> user_list = null;
-    private JTabbedPane history = new JTabbedPane();
+    private JPanel pseudoPane = new JPanel();
     private JLabel current_pseudo = null;
     private JButton change_pseudo_button = new JButton("Changer de pseudo");
+
+    private JPanel listPane = new JPanel();
+    private JLabel online_users = new JLabel("Utilisateurs en ligne:", SwingConstants.CENTER);
+    private JScrollPane scrollPane = new JScrollPane();
+    private JList<String> user_list = null;
+
+    private JTabbedPane history = new JTabbedPane();
 
     public ChatWindow(MainController controler, String current_pseudo) {
         this.controler = controler;
         this.controler.getModel().addObserver(this);
-        this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
-        this.current_pseudo = new JLabel("Connecté en tant que "+current_pseudo);
+
+        DefaultListModel<String> listModel = new DefaultListModel<String>();
+        String[] connected_users = this.controler.getModel().getPseudoList();
+        for(int i=0; i<connected_users.length; i++) {
+          listModel.addElement(connected_users[i]);
+        }
+        this.user_list = new JList<String>(listModel);
+        this.user_list.setCellRenderer(new UserListLabel());
+        this.current_pseudo = new JLabel("Connecté en tant que "+current_pseudo, SwingConstants.CENTER);
         this.showGUI();
     }
 
     public void addComponentsToPanes() {
-      users.setLayout(new BoxLayout(users, BoxLayout.PAGE_AXIS));
-      users.add(current_pseudo);
-      users.add(change_pseudo_button);
-      users.add(online_users);
-      users.add(user_list);
+      users.setLayout(new BorderLayout(20,20));
+      users.add(pseudoPane, BorderLayout.PAGE_START);
+      users.add(listPane, BorderLayout.CENTER);
+      users.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+
+      pseudoPane.setLayout(new BorderLayout(10,10));
+      current_pseudo.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+      pseudoPane.add(current_pseudo, BorderLayout.PAGE_START);
+      pseudoPane.add(change_pseudo_button, BorderLayout.CENTER);
+
+      listPane.setLayout(new BorderLayout(10,10));
+      online_users.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+      listPane.add(online_users, BorderLayout.PAGE_START);
+      listPane.add(scrollPane, BorderLayout.CENTER);
+
+      scrollPane.setViewportView(user_list);
+      user_list.setLayoutOrientation(JList.VERTICAL);
+      user_list.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
       user_list.addMouseListener(new MouseAdapter() {
         public void mouseClicked(MouseEvent e) {
           String selectedItem = (String) user_list.getSelectedValue();
-          boolean alreadyExists = false;
+          int tabExists = -1;
           for(int i = 0; i<history.getTabCount(); i++) {
             if(history.getTitleAt(i).equals(selectedItem)) {
-              alreadyExists = true;
+              tabExists = i;
             }
           }
-          if(!alreadyExists) {
+          if(tabExists==-1) {
             InetAddress tab_ip = controler.getModel().getIpFromPseudo(selectedItem);
             UserTabPane historyPane = new UserTabPane(history,controler,tab_ip);
             history.addTab(selectedItem,historyPane);
             history.setTabComponentAt(history.getTabCount()-1,new ButtonTabComponent(history));
             history.setSelectedIndex(history.getTabCount()-1);
+          }
+          else {
+            history.setSelectedIndex(tabExists);
           }
         }
       });
@@ -53,7 +82,6 @@ public class ChatWindow extends JFrame implements Observer {
       change_pseudo_button.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             controler.getModel().removeObserver();
-            controler.disconnect();
             dispose();
             LoginWindow login = new LoginWindow(controler,true);
           }
@@ -97,7 +125,7 @@ public class ChatWindow extends JFrame implements Observer {
       if(str.equals("new_user_online") || str.equals("new_user_offline")) {
         this.user_list = null;
         this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
-        this.users.repaint();
+        this.users.revalidate();
       }
       else if(str.contains("new_message_to_")) {
         String tmp = str.replace("new_message_to_","");
