@@ -56,14 +56,45 @@ public class UserTabPane extends JPanel {
 
     send_button.addActionListener(new ActionListener () {
       public void actionPerformed(ActionEvent e) {
-        String msg = msg_to_send.getText();
-        if(!msg.equals("")) {
-          msg_to_send.setText("");
-          String dest_pseudo = containerPane.getTitleAt(containerPane.getSelectedIndex());
-          controler.sendMessage(msg.getBytes(),dest_pseudo);
-        }
+        processMsg();
       }
     });
+
+    msg_to_send.addKeyListener(new CustomKeyListener());
+  }
+
+  private class CustomKeyListener implements KeyListener{
+      public void keyTyped(KeyEvent e) {
+      }
+      public void keyPressed(KeyEvent e) {
+         if(e.getKeyCode() == KeyEvent.VK_ENTER){
+           processMsg();
+         }
+      }
+      public void keyReleased(KeyEvent e) {
+      }
+  }
+
+  public void processMsg() {
+    String msg = msg_to_send.getText();
+    if(!msg.equals("")) {
+      msg_to_send.setText("");
+      String dest_pseudo = containerPane.getTitleAt(containerPane.getSelectedIndex());
+      controler.sendMessage(msg.getBytes(),dest_pseudo);
+    }
+    else {
+      Object[] options = {"Envoyer quand même", "Annuler"};
+      int choice = JOptionPane.showOptionDialog(null, "Vous êtes sur le point d'envoyer un message vide !", "Attention message vide !",
+                                          JOptionPane.YES_NO_OPTION,
+                                          JOptionPane.QUESTION_MESSAGE,
+                                          null,
+                                          options,
+                                          options[1]);
+      if(choice==0) {
+        String dest_pseudo = containerPane.getTitleAt(containerPane.getSelectedIndex());
+        controler.sendMessage(msg.getBytes(),dest_pseudo);
+      }
+    }
   }
 
   public void updateHistory() {

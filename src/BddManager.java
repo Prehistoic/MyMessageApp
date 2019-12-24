@@ -5,14 +5,18 @@ import java.sql.*;
 public class BddManager implements Observable {
 
     private Connection bdd_connection;
+    private PreparedStatement bdd_preparedstatement;
     private Statement bdd_statement;
+
     protected ArrayList<User> connected_users;
     protected User local_user;
     protected ArrayList<Observer> listObserver;
 
     public BddManager() {
+
         this.bdd_connection = null;
         this.bdd_statement = null;
+        this.bdd_preparedstatement = null;
 
         this.connected_users = new ArrayList<User>();
 
@@ -129,15 +133,19 @@ public class BddManager implements Observable {
 
             Class.forName("org.sqlite.JDBC");
             this.bdd_connection = DriverManager.getConnection("jdbc:sqlite:app.db");
-
             this.bdd_statement = this.bdd_connection.createStatement();
 
             if(local_user.getIp().equals(source)) {
                 sql = "create table if not exists LOG_"+ dest_reformatted +" (source VARCHAR(20), dest VARCHAR(20), data VARCHAR(100), timestamp VARCHAR(20))";
                 this.bdd_statement.executeUpdate(sql);
 
-                sql = "insert into LOG_"+ dest_reformatted +" (source,dest,data,timestamp) values ('"+ source_address +"', '"+ dest_address +"', '"+data_str+"', '"+timestamp+"');";
-                this.bdd_statement.executeUpdate(sql);
+                sql = "insert into LOG_" + dest_reformatted +" (source, dest, data, timestamp) values (?,?,?,?);";
+                this.bdd_preparedstatement = this.bdd_connection.prepareStatement(sql);
+                this.bdd_preparedstatement.setString(1,source_address);
+                this.bdd_preparedstatement.setString(2,dest_address);
+                this.bdd_preparedstatement.setString(3, data_str);
+                this.bdd_preparedstatement.setString(4, timestamp);
+                this.bdd_preparedstatement.executeUpdate();
 
                 notifyObserver("new_message_to_"+ dest_reformatted);
             }
@@ -167,7 +175,6 @@ public class BddManager implements Observable {
         try {
             Class.forName("org.sqlite.JDBC");
             this.bdd_connection = DriverManager.getConnection("jdbc:sqlite:app.db");
-
             this.bdd_statement = this.bdd_connection.createStatement();
 
             String sql = "create table if not exists LOG_"+ target_reformatted +" (source VARCHAR(20), dest VARCHAR(20), data VARCHAR(100), timestamp VARCHAR(20))";

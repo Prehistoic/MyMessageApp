@@ -45,6 +45,9 @@ public class MessageHistory extends JPanel {
     time_info.setFont(font);
     String data_str = new String(this.data);
     message_content = new JTextArea(data_str);
+    message_content.setLineWrap(true);
+    message_content.setWrapStyleWord(true);
+    message_content.setEditable(false);
     message_content.setBackground(new Color(0,0,0,0));
     message_content.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
 

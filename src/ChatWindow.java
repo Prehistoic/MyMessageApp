@@ -26,14 +26,11 @@ public class ChatWindow extends JFrame implements Observer {
         this.controler = controler;
         this.controler.getModel().addObserver(this);
 
-        DefaultListModel<String> listModel = new DefaultListModel<String>();
-        String[] connected_users = this.controler.getModel().getPseudoList();
-        for(int i=0; i<connected_users.length; i++) {
-          listModel.addElement(connected_users[i]);
-        }
-        this.user_list = new JList<String>(listModel);
+        this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
         this.user_list.setCellRenderer(new UserListLabel());
         this.current_pseudo = new JLabel("Connecté en tant que "+current_pseudo, SwingConstants.CENTER);
+        this.history.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+
         this.showGUI();
     }
 
@@ -67,9 +64,6 @@ public class ChatWindow extends JFrame implements Observer {
             }
           }
           if(tabExists==-1) {
-            if(history.getTabCount()==7) {
-              history.remove(0);
-            }
             InetAddress tab_ip = controler.getModel().getIpFromPseudo(selectedItem);
             UserTabPane historyPane = new UserTabPane(history,controler,tab_ip);
             history.addTab(selectedItem,historyPane);
@@ -126,9 +120,7 @@ public class ChatWindow extends JFrame implements Observer {
     public void update(String str) {
       System.out.println(str);
       if(str.equals("new_user_online") || str.equals("new_user_offline")) {
-        this.user_list = null;
-        this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
-        this.users.revalidate();
+        user_list.setListData(controler.getModel().getPseudoList());
       }
       else if(str.contains("new_message_to_")) {
         String tmp = str.replace("new_message_to_","");

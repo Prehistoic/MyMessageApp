@@ -3,6 +3,9 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 
+// A ENLEVER C EST POUR LES TESTS
+import java.net.InetAddress;
+
 public class LoginWindow extends JFrame implements Observer {
 
     private MainController controler;
@@ -18,6 +21,11 @@ public class LoginWindow extends JFrame implements Observer {
     private JLabel online_users = new JLabel("Utilisateurs en ligne:", SwingConstants.CENTER);
     private JScrollPane scrollPane = new JScrollPane();
     private JList<String> user_list = null;
+
+    // POUR LES TESTS
+    private JPanel test_user = new JPanel();
+    private JButton add_user = new JButton("+");
+    private JButton rm_user = new JButton("-");
 
     public LoginWindow(MainController controler, boolean alreadyConnected) {
       this.alreadyConnected = alreadyConnected;
@@ -36,8 +44,43 @@ public class LoginWindow extends JFrame implements Observer {
         user_list.setLayoutOrientation(JList.VERTICAL);
         users.add(online_users, BorderLayout.PAGE_START);
         users.add(scrollPane, BorderLayout.CENTER);
+        users.add(test_user, BorderLayout.PAGE_END); // A ENLEVER, TEST
         users.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        
+
+        // POUR LES TESTS
+        test_user.setLayout(new BoxLayout(test_user, BoxLayout.LINE_AXIS));
+        test_user.add(Box.createRigidArea(new Dimension(10,0)));
+        test_user.add(add_user);
+        test_user.add(Box.createRigidArea(new Dimension(10,0)));
+        test_user.add(rm_user);
+        test_user.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+
+        // POUR LES TESTS
+        add_user.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              try {
+                InetAddress address = InetAddress.getByName("190.168.120.200");
+                controler.getModel().addUser(new User(address,"Test User"));
+              } catch (Exception ex) {
+                System.err.println(ex.getClass().getName()+":"+ex.getMessage());
+                System.exit(0);
+              }
+            }
+        });
+
+        // POUR LES TESTS
+        rm_user.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+            try {
+              InetAddress address = InetAddress.getByName("190.168.120.200");
+              controler.getModel().rmUser(new User(address,"Test User"));
+            } catch (Exception ex) {
+              System.err.println(ex.getClass().getName()+":"+ex.getMessage());
+              System.exit(0);
+            }
+          }
+        });
+
         login.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         labelPseudo.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
@@ -66,33 +109,56 @@ public class LoginWindow extends JFrame implements Observer {
 
         connect_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-              String pseudo = textPseudo.getText();
-              if(!pseudo.equals("")) {
-                String[] pseudo_list = controler.getModel().getPseudoList();
-                boolean pseudoAlreadyTaken = false;
-                for(int i=0; i<pseudo_list.length; i++) {
-                  if(pseudo_list[i].equals(pseudo)) {
-                    pseudoAlreadyTaken = true;
-                  }
-                }
-                if(!pseudoAlreadyTaken) {
-                    if(!alreadyConnected)
-                      controler.connect(pseudo);
-                    else
-                      controler.updatePseudo(pseudo);
-                    controler.getModel().removeObserver();
-                    dispose();
-                    ChatWindow chat = new ChatWindow(controler, pseudo);
-                }
-                else {
-                  JOptionPane.showMessageDialog(null,"Ce pseudo n'est pas disponible pour le moment. Veuillez en choisir un autre !");
-                }
-              }
-              else {
-                JOptionPane.showMessageDialog(null,"Vous devez choisir un pseudo non vide !");
-              }
+              choosePseudo();
             }
         });
+
+        textPseudo.addKeyListener(new CustomKeyListener());
+    }
+
+    private class CustomKeyListener implements KeyListener {
+        public void keyTyped(KeyEvent e) {
+        }
+        public void keyPressed(KeyEvent e) {
+           if(e.getKeyCode() == KeyEvent.VK_ENTER){
+             choosePseudo();
+           }
+        }
+        public void keyReleased(KeyEvent e) {
+        }
+     }
+
+     public void choosePseudo() {
+      String pseudo = textPseudo.getText();
+      if(!pseudo.equals("")) {
+        if(pseudo.length()>16) {
+          JOptionPane.showMessageDialog(null,"Ce pseudo est trop long (16 caractères maximum !)");
+        }
+        else {
+          String[] pseudo_list = controler.getModel().getPseudoList();
+          boolean pseudoAlreadyTaken = false;
+          for(int i=0; i<pseudo_list.length; i++) {
+            if(pseudo_list[i].equals(pseudo)) {
+              pseudoAlreadyTaken = true;
+            }
+          }
+          if(!pseudoAlreadyTaken) {
+              if(!alreadyConnected)
+                controler.connect(pseudo);
+              else
+                controler.updatePseudo(pseudo);
+              controler.getModel().removeObserver();
+              dispose();
+              ChatWindow chat = new ChatWindow(controler, pseudo);
+          }
+          else {
+            JOptionPane.showMessageDialog(null,"Ce pseudo n'est pas disponible pour le moment. Veuillez en choisir un autre !");
+          }
+        }
+      }
+      else {
+        JOptionPane.showMessageDialog(null,"Vous devez choisir un pseudo non vide !");
+      }
     }
 
     public void showGUI() {
@@ -124,10 +190,9 @@ public class LoginWindow extends JFrame implements Observer {
 
     // Implémentation du pattern observer
     public void update(String str) {
+      System.out.println(str);
       if(str.equals("new_user_online") || str.equals("new_user_offline")) {
-        this.user_list = null;
-        this.user_list = new JList<String>(this.controler.getModel().getPseudoList());
-        this.users.revalidate();
+        user_list.setListData(controler.getModel().getPseudoList());
       }
     }
 
